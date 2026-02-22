@@ -1,0 +1,50 @@
+{
+  "name": "logger",
+  "version": "1.0.0",
+  "description": "Simple TypeScript logger with config file support",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "prepublishOnly": "bun run build",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "lint":"oxlint",
+    "lint:fix":"oxlint --fix"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@vitest/ui": "^1.0.0",
+    "oxlint": "^1.49.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "logger",
+    "logging",
+    "typescript",
+    "javascript",
+    "react",
+    "vue",
+    "config"
+  ]
+}
