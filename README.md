@@ -26,37 +26,37 @@ bun add simple-logger
 ### Basic Usage
 
 ```typescript
-import { Logger } from 'simple-logger';
+import { Logger } from "simple-logger";
 
 const logger = new Logger();
-await logger.info('Hello, world!');
+await logger.info("Hello, world!");
 // Output: [2024-01-01T12:00:00.000Z] [INFO] Hello, world!
 ```
 
 ### With Path and Options
 
 ```typescript
-import { Logger } from 'simple-logger';
+import { Logger } from "simple-logger";
 
-const logger = new Logger('/app/components/User.tsx', {
-  level: 'debug',
-  prefix: 'User',
-  timestamps: true,
-  colors: true,
-  loggingFile: './logs/app.log'
+const logger = new Logger("/app/components/User.tsx", {
+	level: "debug",
+	prefix: "User",
+	timestamps: true,
+	colors: true,
+	loggingFile: "./logs/app.log"
 });
 
-await logger.info('User logged in');
+await logger.info("User logged in");
 // Output: [2024-01-01T12:00:00.000Z] [INFO] [/app/components/User.tsx] [User] User logged in
 ```
 
 ### Using `import.meta.url`
 
 ```typescript
-import { Logger } from 'simple-logger';
+import { Logger } from "simple-logger";
 
 const logger = new Logger(import.meta.url);
-await logger.debug('Component initialized');
+await logger.debug("Component initialized");
 ```
 
 ## Configuration
@@ -64,19 +64,19 @@ await logger.debug('Component initialized');
 Create a `logger.config.ts` file in your project root:
 
 ```typescript
-import { defineConfig } from 'simple-logger';
+import { defineConfig } from "simple-logger";
 
 export default defineConfig({
-  timestamps: true,
-  colors: true,
-  loggingFile: './logs/app.log',
-  onLog: (details) => {
-    // Custom logic for each log entry
-    if (details.level === 'error') {
-      // Send to monitoring service
-      console.error('[ALERT]', details.message);
-    }
-  },
+	timestamps: true,
+	colors: true,
+	loggingFile: "./logs/app.log",
+	onLog: (details) => {
+		// Custom logic for each log entry
+		if (details.level === "error") {
+			// Send to monitoring service
+			console.error("[ALERT]", details.message);
+		}
+	}
 });
 ```
 
@@ -95,11 +95,11 @@ new Logger(path?: string, options?: LoggerOptions)
 
 ```typescript
 interface LoggerOptions {
-  level?: 'debug' | 'info' | 'warn' | 'error';
-  prefix?: string;
-  timestamps?: boolean;
-  colors?: boolean;
-  loggingFile?: string;
+	level?: "debug" | "info" | "warn" | "error";
+	prefix?: string;
+	timestamps?: boolean;
+	colors?: boolean;
+	loggingFile?: string;
 }
 ```
 
@@ -117,21 +117,23 @@ await logger.error(message: string, ...args: unknown[])
 ### Child Loggers
 
 ```typescript
-const parent = new Logger('/app/server.ts', { prefix: 'Server' });
-const child = parent.child({ prefix: 'API' });
+const parent = new Logger("/app/server.ts", { prefix: "Server" });
+const child = parent.child({ prefix: "API" });
 
-await child.info('API request received');
+await child.info("API request received");
 // Output: [INFO] [/app/server.ts] [API] API request received
 ```
 
 ## Environment Behavior
 
 ### Node.js
+
 - Full file logging support
 - Automatic directory creation
 - Config file loading from `logger.config.ts`
 
 ### Browser
+
 - Console-only logging (unless in dev mode with `loggingFile`)
 - No filesystem access
 - Vite development mode detection
@@ -141,54 +143,54 @@ await child.info('API request received');
 ### Express.js Integration
 
 ```typescript
-import express from 'express';
-import { Logger } from 'simple-logger';
+import express from "express";
+import { Logger } from "simple-logger";
 
 const app = express();
-const logger = new Logger('/app/server.ts', { prefix: 'Express' });
+const logger = new Logger("/app/server.ts", { prefix: "Express" });
 
 app.use((req, res, next) => {
-  await logger.info(`${req.method} ${req.path}`);
-  next();
+	await logger.info(`${req.method} ${req.path}`);
+	next();
 });
 
 app.listen(3000, () => {
-  await logger.info('Server started on port 3000');
+	await logger.info("Server started on port 3000");
 });
 ```
 
 ### React Component
 
 ```tsx
-import { useEffect } from 'react';
-import { Logger } from 'simple-logger';
+import { useEffect } from "react";
+import { Logger } from "simple-logger";
 
-const logger = new Logger(import.meta.url, { prefix: 'UserProfile' });
+const logger = new Logger(import.meta.url, { prefix: "UserProfile" });
 
 function UserProfile() {
-  useEffect(() => {
-    logger.info('Component mounted');
-    return () => logger.info('Component unmounted');
-  }, []);
+	useEffect(() => {
+		logger.info("Component mounted");
+		return () => logger.info("Component unmounted");
+	}, []);
 
-  const handleClick = () => {
-    logger.warn('Button clicked without user session');
-  };
+	const handleClick = () => {
+		logger.warn("Button clicked without user session");
+	};
 
-  return <button onClick={handleClick}>Click me</button>;
+	return <button onClick={handleClick}>Click me</button>;
 }
 ```
 
 ### Error Handling
 
 ```typescript
-const logger = new Logger('/app/api.ts', { prefix: 'API' });
+const logger = new Logger("/app/api.ts", { prefix: "API" });
 
 try {
-  const data = await fetchData();
-  await logger.info('Data fetched successfully', { count: data.length });
+	const data = await fetchData();
+	await logger.info("Data fetched successfully", { count: data.length });
 } catch (error) {
-  await logger.error('Failed to fetch data', { error: error.message });
+	await logger.error("Failed to fetch data", { error: error.message });
 }
 ```
 
@@ -309,16 +311,19 @@ MIT
 The features are prioritized based on community needs and practical utility:
 
 **High Priority**
+
 - Log rotation
 - Structured logging
 - Better TypeScript support
 
 **Medium Priority**
+
 - Remote logging
 - Performance monitoring
 - Integration features
 
 **Low Priority**
+
 - Advanced configuration
 - Development tools
 - Additional storage backends

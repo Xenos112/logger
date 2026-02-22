@@ -1,2 +1,17 @@
-export { Logger, type LogLevel, type LoggerOptions } from './logger.js';
-export { loadLoggerConfig, clearConfigCache, defineConfig, type LoggerConfig, type LogDetails, type OnLogFunction, isNode, isDev } from './config.js';
+export { Logger } from "./logger.js";
+
+export type {
+	LogLevel,
+	LoggerOptions,
+	LoggerConfig,
+	LogDetails,
+	OnLogFunction
+} from "./types";
+
+export {
+	loadLoggerConfig,
+	clearConfigCache,
+	defineConfig,
+	isNode,
+	isDev
+} from "./config.js";
