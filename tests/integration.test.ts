@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Logger } from '../src/logger.js';
-import { clearConfigCache, defineConfig, loadLoggerConfig } from '../src/config.js';
+import { clearConfigCache, defineConfig } from '../src/config.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

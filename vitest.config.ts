@@ -21,9 +21,4 @@ export default defineConfig({
     hookTimeout: 10000,
     teardownTimeout: 10000,
   },
-  resolve: {
-    alias: {
-      'simple-logger': './src/index.ts',
-    },
-  },
 });

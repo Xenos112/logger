@@ -1,5 +1,5 @@
 import { defineConfig, loadLoggerConfig, clearConfigCache, isNode, isDev, writeToFile } from '../src/config.js';
-import { describe, it, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

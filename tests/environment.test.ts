@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Logger } from '../src/logger.js';
-import { clearConfigCache, loadLoggerConfig, defineConfig } from '../src/config.js';
+import { clearConfigCache, loadLoggerConfig } from '../src/config.js';
 
 describe('Logger - Browser Environment Simulation', () => {
   let consoleSpy: any;

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { Logger, LogLevel } from '../src/logger.js';
+import { Logger } from '../src/logger.js';
 import { clearConfigCache } from '../src/config.js';
 
 describe('Logger - Unit Tests', () => {
