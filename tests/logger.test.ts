@@ -169,6 +169,93 @@ describe("Logger - Unit Tests", () => {
 		});
 	});
 
+	describe("JSON Format", () => {
+		it("should output JSON when json option is true", async () => {
+			const logger = new Logger(undefined, { json: true });
+			await logger.info("test message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.level).toBe("INFO");
+			expect(parsed.message).toBe("test message");
+		});
+
+		it("should include timestamp in JSON when timestamps is true", async () => {
+			const logger = new Logger(undefined, { json: true, timestamps: true });
+			await logger.info("test");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.timestamp).toBeDefined();
+			expect(new Date(parsed.timestamp).toISOString()).toBe(parsed.timestamp);
+		});
+
+		it("should not include timestamp in JSON when timestamps is false", async () => {
+			const logger = new Logger(undefined, { json: true, timestamps: false });
+			await logger.info("test");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.timestamp).toBeUndefined();
+		});
+
+		it("should include file path in JSON when path is provided", async () => {
+			const logger = new Logger("/test/file.ts", { json: true });
+			await logger.info("test");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.file).toBe("/test/file.ts");
+		});
+
+		it("should include prefix in JSON when prefix is provided", async () => {
+			const logger = new Logger(undefined, { json: true, prefix: "MyApp" });
+			await logger.info("test");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.prefix).toBe("MyApp");
+		});
+
+		it("should not include file in JSON when path is not provided", async () => {
+			const logger = new Logger(undefined, { json: true });
+			await logger.info("test");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.file).toBeUndefined();
+		});
+
+		it("should output normal format when json is false (default)", async () => {
+			const logger = new Logger(undefined, { json: false, colors: false, timestamps: false });
+			await logger.info("test message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			expect(callArg).toBe("[INFO] test message");
+		});
+
+		it("should inherit json option in child logger", async () => {
+			const parent = new Logger(undefined, { json: true, colors: false, timestamps: false });
+			const child = parent.child({});
+
+			await child.info("child message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.message).toBe("child message");
+		});
+
+		it("should allow child to override json option", async () => {
+			const parent = new Logger(undefined, { json: true, colors: false });
+			const child = parent.child({ json: false, timestamps: false, colors: false });
+
+			await child.info("child message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			expect(callArg).toBe("[INFO] child message");
+		});
+	});
+
 	describe("Path", () => {
 		it("should include path in output when path is provided", async () => {
 			const logger = new Logger("/test/file.ts");
