@@ -35,6 +35,7 @@ export class Logger {
 	private path: string | null;
 	private configLoaded: boolean = false;
 	private userOptions: LoggerOptions;
+	private metadata: Record<string, unknown>;
 
 	constructor(path?: string, options: LoggerOptions = {}) {
 		// Start with defaults, will be overridden by config and user options
@@ -46,6 +47,7 @@ export class Logger {
 		this.loggingFile = null;
 		this.path = path ?? null;
 		this.userOptions = options;
+		this.metadata = {};
 	}
 
 	private async ensureConfig(): Promise<void> {
@@ -60,6 +62,7 @@ export class Logger {
 			timestamps: true,
 			colors: true,
 			json: false,
+			metadata: {},
 			loggingFile: null!
 		};
 
@@ -86,6 +89,8 @@ export class Logger {
 			finalConfig.colors = this.userOptions.colors;
 		if (this.userOptions.json !== undefined)
 			finalConfig.json = this.userOptions.json;
+		if (this.userOptions.metadata !== undefined)
+			finalConfig.metadata = this.userOptions.metadata;
 		if (this.userOptions.loggingFile !== undefined)
 			finalConfig.loggingFile = this.userOptions.loggingFile;
 
@@ -95,6 +100,7 @@ export class Logger {
 		this.timestamps = finalConfig.timestamps;
 		this.colors = finalConfig.colors;
 		this.json = finalConfig.json;
+		this.metadata = finalConfig.metadata;
 		this.loggingFile = finalConfig.loggingFile ?? null;
 		// path is set in constructor and not overridden by config
 
@@ -157,6 +163,10 @@ export class Logger {
 			logObject.prefix = this.prefix;
 		}
 
+		if (this.metadata && Object.keys(this.metadata).length > 0) {
+			logObject.metadata = this.metadata;
+		}
+
 		return JSON.stringify(logObject);
 	}
 
@@ -202,7 +212,8 @@ export class Logger {
 				message,
 				timestamp,
 				prefix: this.prefix || undefined,
-				args
+				args,
+				metadata: this.metadata
 			};
 			await globalConfig.onLog(details);
 		}
@@ -244,12 +255,14 @@ export class Logger {
 		const inheritedJson = this.userOptions.json;
 		const inheritedColors = this.colors;
 		const inheritedTimestamps = this.timestamps;
+		const inheritedMetadata = this.userOptions.metadata;
 		return new Logger(this.path ?? undefined, {
 			level: options.level,
 			prefix: options.prefix ?? inheritedPrefix,
 			timestamps: options.timestamps ?? inheritedTimestamps,
 			colors: options.colors ?? inheritedColors,
 			json: options.json ?? inheritedJson,
+			metadata: options.metadata ?? inheritedMetadata,
 			loggingFile: options.loggingFile ?? this.loggingFile ?? undefined
 		});
 	}

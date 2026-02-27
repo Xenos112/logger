@@ -7,6 +7,7 @@ export interface LoggerOptions {
 	colors?: boolean;
 	loggingFile?: string;
 	json?: boolean;
+	metadata?: Record<string, unknown>;
 }
 
 export interface LogDetails {
@@ -16,6 +17,7 @@ export interface LogDetails {
 	file?: string;
 	prefix?: string;
 	args: unknown[];
+	metadata?: Record<string, unknown>;
 }
 
 export type OnLogFunction = (details: LogDetails) => void | Promise<void>;

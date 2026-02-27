@@ -228,7 +228,7 @@ MIT
 
 - [ ] **Structured Logging**
   - [x] JSON output format option
-  - [ ] Key-value pairs for metadata
+  - [x] Key-value pairs for metadata
   - [ ] Searchable log format
   - [ ] Integration with log analysis tools
 

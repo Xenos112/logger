@@ -383,4 +383,109 @@ describe("Logger - Unit Tests", () => {
 			expect(callArg).toBe("[INFO] simple message");
 		});
 	});
+
+	describe("Metadata", () => {
+		it("should include metadata in onLog callback", async () => {
+			clearConfigCache();
+
+			const logger = new Logger(undefined, {
+				json: true,
+				colors: false,
+				metadata: { userId: 123, requestId: "abc-456" }
+			} as any);
+
+			await (logger as any).info("test message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			expect(callArg).toContain('"userId":123');
+			expect(callArg).toContain('"requestId":"abc-456"');
+		});
+
+		it("should include metadata in JSON output", async () => {
+			const logger = new Logger(undefined, {
+				json: true,
+				colors: false,
+				metadata: { userId: 123 }
+			});
+
+			await logger.info("test message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.metadata).toEqual({ userId: 123 });
+		});
+
+		it("should not include metadata in JSON when not provided", async () => {
+			const logger = new Logger(undefined, {
+				json: true,
+				colors: false
+			});
+
+			await logger.info("test message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.metadata).toBeUndefined();
+		});
+
+		it("should inherit metadata in child logger", async () => {
+			const parent = new Logger(undefined, {
+				metadata: { parentKey: "parentValue" },
+				json: true,
+				colors: false,
+				timestamps: false
+			});
+			const child = parent.child({});
+
+			await child.info("child message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.metadata).toEqual({ parentKey: "parentValue" });
+		});
+
+		it("should allow child to override metadata", async () => {
+			const parent = new Logger(undefined, {
+				metadata: { parentKey: "parentValue" },
+				json: true,
+				colors: false,
+				timestamps: false
+			});
+			const child = parent.child({ metadata: { childKey: "childValue" } });
+
+			await child.info("child message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.metadata).toEqual({ childKey: "childValue" });
+		});
+
+		it("should handle empty metadata object", async () => {
+			const logger = new Logger(undefined, {
+				json: true,
+				colors: false,
+				metadata: {}
+			});
+
+			await logger.info("test message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.metadata).toBeUndefined();
+		});
+
+		it("should include nested metadata in JSON output", async () => {
+			const logger = new Logger(undefined, {
+				json: true,
+				colors: false,
+				metadata: { user: { name: "John", id: 1 } }
+			});
+
+			await logger.info("test message");
+
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			const parsed = JSON.parse(callArg);
+			expect(parsed.metadata).toEqual({ user: { name: "John", id: 1 } });
+		});
+	});
 });
