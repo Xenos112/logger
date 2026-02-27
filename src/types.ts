@@ -6,8 +6,10 @@ export interface LoggerOptions {
 	timestamps?: boolean;
 	colors?: boolean;
 	loggingFile?: string;
+	enableFileLogging?: boolean;
 	json?: boolean;
 	metadata?: Record<string, unknown>;
+	onLog?: OnLogFunction;
 }
 
 export interface LogDetails {
@@ -31,6 +33,8 @@ export interface LoggerConfig {
 	colors?: boolean;
 	/** Output logs in JSON format */
 	json?: boolean;
+	/** Metadata key-value pairs included in every log */
+	metadata?: Record<string, unknown>;
 	/** Callback function executed on every log */
 	onLog?: OnLogFunction;
 }

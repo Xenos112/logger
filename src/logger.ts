@@ -1,5 +1,11 @@
 import { loadLoggerConfig, writeToFile } from "./config";
-import { LogDetails, LogLevel, LoggerConfig, LoggerOptions } from "./types";
+import {
+	LogDetails,
+	LogLevel,
+	LoggerConfig,
+	LoggerOptions,
+	OnLogFunction
+} from "./types";
 
 const LOG_LEVELS: Record<LogLevel, number> = {
 	debug: 0,
@@ -17,6 +23,14 @@ const COLORS: Record<LogLevel, string> = {
 
 const RESET = "\x1b[0m";
 
+function safeStringify(obj: unknown): string {
+	try {
+		return JSON.stringify(obj);
+	} catch {
+		return "[Circular or non-serializable object]";
+	}
+}
+
 let globalConfig: LoggerConfig | null = null;
 
 async function initGlobalConfig(): Promise<void> {
@@ -32,10 +46,12 @@ export class Logger {
 	private colors: boolean;
 	private json: boolean;
 	private loggingFile: string | null;
+	private enableFileLogging: boolean;
 	private path: string | null;
 	private configLoaded: boolean = false;
 	private userOptions: LoggerOptions;
 	private metadata: Record<string, unknown>;
+	private onLog: OnLogFunction | undefined;
 
 	constructor(path?: string, options: LoggerOptions = {}) {
 		// Start with defaults, will be overridden by config and user options
@@ -45,9 +61,11 @@ export class Logger {
 		this.colors = true;
 		this.json = false;
 		this.loggingFile = null;
+		this.enableFileLogging = true;
 		this.path = path ?? null;
 		this.userOptions = options;
 		this.metadata = {};
+		this.onLog = options.onLog;
 	}
 
 	private async ensureConfig(): Promise<void> {
@@ -55,14 +73,24 @@ export class Logger {
 
 		await initGlobalConfig();
 
+		type ConfigWithOptionalOnLog = Omit<
+			Required<LoggerOptions>,
+			"onLog" | "enableFileLogging"
+		> & {
+			onLog?: OnLogFunction;
+			enableFileLogging: boolean;
+		};
+
 		// Start with hardcoded defaults
-		const finalConfig: Required<LoggerOptions> = {
+		const finalConfig: ConfigWithOptionalOnLog = {
 			level: "info",
 			prefix: "",
 			timestamps: true,
 			colors: true,
 			json: false,
 			metadata: {},
+			onLog: this.onLog,
+			enableFileLogging: true,
 			loggingFile: null!
 		};
 
@@ -74,8 +102,12 @@ export class Logger {
 				finalConfig.colors = globalConfig.colors;
 			if (globalConfig.json !== undefined)
 				finalConfig.json = globalConfig.json;
+			if (globalConfig.metadata !== undefined)
+				finalConfig.metadata = globalConfig.metadata;
 			if (globalConfig.loggingFile !== undefined)
 				finalConfig.loggingFile = globalConfig.loggingFile;
+			if (globalConfig.onLog !== undefined && !finalConfig.onLog)
+				finalConfig.onLog = globalConfig.onLog;
 		}
 
 		// Apply user options as overrides (only if explicitly provided)
@@ -93,6 +125,10 @@ export class Logger {
 			finalConfig.metadata = this.userOptions.metadata;
 		if (this.userOptions.loggingFile !== undefined)
 			finalConfig.loggingFile = this.userOptions.loggingFile;
+		if (this.userOptions.onLog !== undefined)
+			finalConfig.onLog = this.userOptions.onLog;
+		if (this.userOptions.enableFileLogging !== undefined)
+			finalConfig.enableFileLogging = this.userOptions.enableFileLogging;
 
 		// Apply final config to instance
 		this.level = finalConfig.level;
@@ -101,6 +137,8 @@ export class Logger {
 		this.colors = finalConfig.colors;
 		this.json = finalConfig.json;
 		this.metadata = finalConfig.metadata;
+		this.onLog = finalConfig.onLog;
+		this.enableFileLogging = finalConfig.enableFileLogging;
 		this.loggingFile = finalConfig.loggingFile ?? null;
 		// path is set in constructor and not overridden by config
 
@@ -167,7 +205,7 @@ export class Logger {
 			logObject.metadata = this.metadata;
 		}
 
-		return JSON.stringify(logObject);
+		return safeStringify(logObject);
 	}
 
 	private async log(
@@ -184,20 +222,20 @@ export class Logger {
 		const consoleMessage = this.formatMessage(level, message, true);
 		const fileMessage = this.formatMessage(level, message, false);
 
-		if (this.loggingFile) {
+		if (this.loggingFile && this.enableFileLogging) {
 			let fileOutput = fileMessage;
 			if (args.length > 0) {
 				if (this.json) {
 					const logObj = JSON.parse(fileMessage);
 					logObj.args = args;
-					fileOutput = JSON.stringify(logObj);
+					fileOutput = safeStringify(logObj);
 				} else {
 					fileOutput =
 						fileMessage +
 						" " +
 						args
 							.map((a) =>
-								typeof a === "object" ? JSON.stringify(a) : String(a)
+								typeof a === "object" ? safeStringify(a) : String(a)
 							)
 							.join(" ");
 				}
@@ -205,17 +243,18 @@ export class Logger {
 			await writeToFile(this.loggingFile, fileOutput);
 		}
 
-		// Execute onLog callback if defined in config
-		if (globalConfig?.onLog) {
+		// Execute onLog callback if defined (from options or config)
+		if (this.onLog) {
 			const details: LogDetails = {
 				level,
 				message,
 				timestamp,
+				file: this.path || undefined,
 				prefix: this.prefix || undefined,
 				args,
 				metadata: this.metadata
 			};
-			await globalConfig.onLog(details);
+			await this.onLog(details);
 		}
 
 		if (this.json) {
@@ -256,6 +295,7 @@ export class Logger {
 		const inheritedColors = this.colors;
 		const inheritedTimestamps = this.timestamps;
 		const inheritedMetadata = this.userOptions.metadata;
+		const inheritedEnableFileLogging = this.enableFileLogging;
 		return new Logger(this.path ?? undefined, {
 			level: options.level,
 			prefix: options.prefix ?? inheritedPrefix,
@@ -263,6 +303,7 @@ export class Logger {
 			colors: options.colors ?? inheritedColors,
 			json: options.json ?? inheritedJson,
 			metadata: options.metadata ?? inheritedMetadata,
+			enableFileLogging: options.enableFileLogging ?? inheritedEnableFileLogging,
 			loggingFile: options.loggingFile ?? this.loggingFile ?? undefined
 		});
 	}
