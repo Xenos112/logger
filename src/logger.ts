@@ -64,7 +64,7 @@ export class Logger {
 		this.enableFileLogging = true;
 		this.path = path ?? null;
 		this.userOptions = options;
-		this.metadata = {};
+		this.metadata = (options.metadata || {});
 		this.onLog = options.onLog;
 	}
 

@@ -1,6 +1,8 @@
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
-export interface LoggerOptions {
+export type LowercaseLogLevel = Lowercase<LogLevel>;
+
+export interface LoggerOptions<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
 	level?: LogLevel;
 	prefix?: string;
 	timestamps?: boolean;
@@ -8,23 +10,23 @@ export interface LoggerOptions {
 	loggingFile?: string;
 	enableFileLogging?: boolean;
 	json?: boolean;
-	metadata?: Record<string, unknown>;
-	onLog?: OnLogFunction;
+	metadata?: TMetadata;
+	onLog?: OnLogFunction<TMetadata>;
 }
 
-export interface LogDetails {
+export interface LogDetails<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
 	level: LogLevel;
 	message: string;
 	timestamp: Date;
 	file?: string;
 	prefix?: string;
 	args: unknown[];
-	metadata?: Record<string, unknown>;
+	metadata?: TMetadata;
 }
 
-export type OnLogFunction = (details: LogDetails) => void | Promise<void>;
+export type OnLogFunction<TMetadata extends Record<string, unknown> = Record<string, unknown>> = (details: LogDetails<TMetadata>) => void | Promise<void>;
 
-export interface LoggerConfig {
+export interface LoggerConfig<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
 	/** File path where logs should be saved (Node.js only) */
 	loggingFile?: string;
 	/** Show timestamps */
@@ -34,7 +36,25 @@ export interface LoggerConfig {
 	/** Output logs in JSON format */
 	json?: boolean;
 	/** Metadata key-value pairs included in every log */
-	metadata?: Record<string, unknown>;
+	metadata?: TMetadata;
 	/** Callback function executed on every log */
-	onLog?: OnLogFunction;
+	onLog?: OnLogFunction<TMetadata>;
+}
+
+export type LogMessageTemplate<T extends string> = T;
+
+export type ExtractLogPrefix<T extends string> = T extends `${infer P}:${string}` ? P : never;
+
+export type ExtractLogMessage<T extends string> = T extends `${string}:${infer M}` ? M : T;
+
+export interface LoggerConstructorOptions<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
+	level?: LogLevel;
+	prefix?: string;
+	timestamps?: boolean;
+	colors?: boolean;
+	loggingFile?: string;
+	enableFileLogging?: boolean;
+	json?: boolean;
+	metadata?: TMetadata;
+	onLog?: OnLogFunction<TMetadata>;
 }
