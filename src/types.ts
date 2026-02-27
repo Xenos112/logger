@@ -4,6 +4,23 @@ export type LowercaseLogLevel = Lowercase<LogLevel>;
 
 export type RotationStrategy = "size" | "date" | "daily" | "hourly";
 
+export type FilterPattern = string | RegExp;
+
+export interface LogFilterConfig {
+	/** Pattern to match messages that should be included */
+	include?: FilterPattern;
+	/** Pattern to match messages that should be excluded */
+	exclude?: FilterPattern;
+	/** Minimum log level (dynamic) */
+	minLevel?: LogLevel;
+	/** Custom filter function */
+	filter?: (details: LogDetails) => boolean;
+	/** List of prefixes to include */
+	includePrefixes?: string[];
+	/** List of prefixes to exclude */
+	excludePrefixes?: string[];
+}
+
 export interface LogRotationConfig {
 	/** Maximum file size in bytes before rotation (e.g., 10 * 1024 * 1024 for 10MB) */
 	maxSize?: number;
@@ -30,6 +47,7 @@ export interface LoggerOptions<TMetadata extends Record<string, unknown> = Recor
 	metadata?: TMetadata;
 	onLog?: OnLogFunction<TMetadata>;
 	rotation?: LogRotationConfig;
+	filter?: LogFilterConfig;
 }
 
 export interface LogDetails<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
@@ -59,6 +77,8 @@ export interface LoggerConfig<TMetadata extends Record<string, unknown> = Record
 	onLog?: OnLogFunction<TMetadata>;
 	/** Log rotation configuration */
 	rotation?: LogRotationConfig;
+	/** Log filtering configuration */
+	filter?: LogFilterConfig;
 }
 
 export type LogMessageTemplate<T extends string> = T;
@@ -78,4 +98,5 @@ export interface LoggerConstructorOptions<TMetadata extends Record<string, unkno
 	metadata?: TMetadata;
 	onLog?: OnLogFunction<TMetadata>;
 	rotation?: LogRotationConfig;
+	filter?: LogFilterConfig;
 }

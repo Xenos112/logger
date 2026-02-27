@@ -5,7 +5,8 @@ import {
 	LoggerConfig,
 	LoggerOptions,
 	OnLogFunction,
-	LogRotationConfig
+	LogRotationConfig,
+	LogFilterConfig
 } from "./types";
 
 const LOG_LEVELS: Record<LogLevel, number> = {
@@ -54,6 +55,7 @@ export class Logger {
 	private metadata: Record<string, unknown>;
 	private onLog: OnLogFunction | undefined;
 	private rotation: LogRotationConfig | undefined;
+	private filter: LogFilterConfig | undefined;
 
 	constructor(path?: string, options: LoggerOptions = {}) {
 		// Start with defaults, will be overridden by config and user options
@@ -69,6 +71,7 @@ export class Logger {
 		this.metadata = (options.metadata || {});
 		this.onLog = options.onLog;
 		this.rotation = options.rotation;
+		this.filter = options.filter;
 	}
 
 	private async ensureConfig(): Promise<void> {
@@ -78,11 +81,12 @@ export class Logger {
 
 		type ConfigWithOptionalOnLog = Omit<
 			Required<LoggerOptions>,
-			"onLog" | "enableFileLogging" | "rotation"
+			"onLog" | "enableFileLogging" | "rotation" | "filter"
 		> & {
 			onLog?: OnLogFunction;
 			enableFileLogging: boolean;
 			rotation?: LogRotationConfig;
+			filter?: LogFilterConfig;
 		};
 
 		// Start with hardcoded defaults
@@ -96,6 +100,7 @@ export class Logger {
 			onLog: this.onLog,
 			enableFileLogging: true,
 			rotation: undefined,
+			filter: undefined,
 			loggingFile: null!
 		};
 
@@ -113,6 +118,8 @@ export class Logger {
 				finalConfig.loggingFile = globalConfig.loggingFile;
 			if (globalConfig.onLog !== undefined && !finalConfig.onLog)
 				finalConfig.onLog = globalConfig.onLog;
+			if (globalConfig.filter !== undefined && !finalConfig.filter)
+				finalConfig.filter = globalConfig.filter;
 		}
 
 		// Apply user options as overrides (only if explicitly provided)
@@ -136,6 +143,8 @@ export class Logger {
 			finalConfig.enableFileLogging = this.userOptions.enableFileLogging;
 		if (this.userOptions.rotation !== undefined)
 			finalConfig.rotation = this.userOptions.rotation;
+		if (this.userOptions.filter !== undefined)
+			finalConfig.filter = this.userOptions.filter;
 
 		// Apply final config to instance
 		this.level = finalConfig.level;
@@ -147,6 +156,7 @@ export class Logger {
 		this.onLog = finalConfig.onLog;
 		this.enableFileLogging = finalConfig.enableFileLogging;
 		this.rotation = finalConfig.rotation;
+		this.filter = finalConfig.filter;
 		this.loggingFile = finalConfig.loggingFile ?? null;
 		// path is set in constructor and not overridden by config
 
@@ -155,6 +165,66 @@ export class Logger {
 
 	private shouldLog(level: LogLevel): boolean {
 		return LOG_LEVELS[level] >= LOG_LEVELS[this.level];
+	}
+
+	private passesFilter(level: LogLevel, message: string, args: unknown[] = []): boolean {
+		if (!this.filter) return true;
+
+		const { include, exclude, minLevel, filter: customFilter, includePrefixes, excludePrefixes } = this.filter;
+
+		// Custom filter function
+		if (customFilter) {
+			const details: LogDetails = {
+				level,
+				message,
+				timestamp: new Date(),
+				prefix: this.prefix || undefined,
+				args,
+				metadata: this.metadata
+			};
+			if (!customFilter(details)) return false;
+		}
+
+		// Check min level
+		if (minLevel !== undefined) {
+			if (LOG_LEVELS[level] < LOG_LEVELS[minLevel]) return false;
+		}
+
+		// Check include patterns
+		if (include) {
+			try {
+				const pattern = typeof include === "string" ? new RegExp(include) : include;
+				if (!pattern.test(message)) return false;
+			} catch {
+				// Invalid regex, skip this check
+			}
+		}
+
+		// Check exclude patterns
+		if (exclude) {
+			try {
+				const pattern = typeof exclude === "string" ? new RegExp(exclude) : exclude;
+				if (pattern.test(message)) return false;
+			} catch {
+				// Invalid regex, skip this check
+			}
+		}
+
+		// Check include prefixes
+		if (includePrefixes && includePrefixes.length > 0) {
+			if (!this.prefix || !includePrefixes.some(p => this.prefix!.startsWith(p))) {
+				return false;
+			}
+		}
+
+		// Check exclude prefixes
+		if (excludePrefixes && excludePrefixes.length > 0) {
+			if (this.prefix && excludePrefixes.some(p => this.prefix!.startsWith(p))) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private formatMessage(
@@ -224,6 +294,7 @@ export class Logger {
 		await this.ensureConfig();
 
 		if (!this.shouldLog(level)) return;
+		if (!this.passesFilter(level, message, args)) return;
 
 		const timestamp = new Date();
 
@@ -309,6 +380,7 @@ export class Logger {
 		const inheritedMetadata = this.userOptions.metadata;
 		const inheritedEnableFileLogging = this.enableFileLogging;
 		const inheritedRotation = this.rotation;
+		const inheritedFilter = this.filter;
 		return new Logger(this.path ?? undefined, {
 			level: options.level,
 			prefix: options.prefix ?? inheritedPrefix,
@@ -318,6 +390,7 @@ export class Logger {
 			metadata: options.metadata ?? inheritedMetadata,
 			enableFileLogging: options.enableFileLogging ?? inheritedEnableFileLogging,
 			rotation: options.rotation ?? inheritedRotation,
+			filter: options.filter ?? inheritedFilter,
 			loggingFile: options.loggingFile ?? this.loggingFile ?? undefined
 		});
 	}
