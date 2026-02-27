@@ -218,13 +218,9 @@ describe("Log Rotation", () => {
 		it("should handle rotation via writeToFile directly", async () => {
 			const logFile = path.join(testDir, "direct-rotate.log");
 
-			await writeToFile(
-				logFile,
-				"Test message",
-				{
-					maxSize: 50
-				}
-			);
+			await writeToFile(logFile, "Test message", {
+				maxSize: 50
+			});
 
 			expect(fs.existsSync(logFile)).toBe(true);
 			const content = fs.readFileSync(logFile, "utf-8");

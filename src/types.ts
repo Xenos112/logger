@@ -36,7 +36,9 @@ export interface LogRotationConfig {
 	dateFormat?: string;
 }
 
-export interface LoggerOptions<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
+export interface LoggerOptions<
+	TMetadata extends Record<string, unknown> = Record<string, unknown>
+> {
 	level?: LogLevel;
 	prefix?: string;
 	timestamps?: boolean;
@@ -50,7 +52,9 @@ export interface LoggerOptions<TMetadata extends Record<string, unknown> = Recor
 	filter?: LogFilterConfig;
 }
 
-export interface LogDetails<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
+export interface LogDetails<
+	TMetadata extends Record<string, unknown> = Record<string, unknown>
+> {
 	level: LogLevel;
 	message: string;
 	timestamp: Date;
@@ -60,9 +64,13 @@ export interface LogDetails<TMetadata extends Record<string, unknown> = Record<s
 	metadata?: TMetadata;
 }
 
-export type OnLogFunction<TMetadata extends Record<string, unknown> = Record<string, unknown>> = (details: LogDetails<TMetadata>) => void | Promise<void>;
+export type OnLogFunction<
+	TMetadata extends Record<string, unknown> = Record<string, unknown>
+> = (details: LogDetails<TMetadata>) => void | Promise<void>;
 
-export interface LoggerConfig<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
+export interface LoggerConfig<
+	TMetadata extends Record<string, unknown> = Record<string, unknown>
+> {
 	/** File path where logs should be saved (Node.js only) */
 	loggingFile?: string;
 	/** Show timestamps */
@@ -83,11 +91,15 @@ export interface LoggerConfig<TMetadata extends Record<string, unknown> = Record
 
 export type LogMessageTemplate<T extends string> = T;
 
-export type ExtractLogPrefix<T extends string> = T extends `${infer P}:${string}` ? P : never;
+export type ExtractLogPrefix<T extends string> =
+	T extends `${infer P}:${string}` ? P : never;
 
-export type ExtractLogMessage<T extends string> = T extends `${string}:${infer M}` ? M : T;
+export type ExtractLogMessage<T extends string> =
+	T extends `${string}:${infer M}` ? M : T;
 
-export interface LoggerConstructorOptions<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
+export interface LoggerConstructorOptions<
+	TMetadata extends Record<string, unknown> = Record<string, unknown>
+> {
 	level?: LogLevel;
 	prefix?: string;
 	timestamps?: boolean;

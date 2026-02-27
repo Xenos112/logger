@@ -240,7 +240,11 @@ describe("Logger - Unit Tests", () => {
 		});
 
 		it("should output normal format when json is false (default)", async () => {
-			const logger = new Logger(undefined, { json: false, colors: false, timestamps: false });
+			const logger = new Logger(undefined, {
+				json: false,
+				colors: false,
+				timestamps: false
+			});
 			await logger.info("test message");
 
 			const callArg = consoleSpy.log.mock.calls[0][0];
@@ -248,7 +252,11 @@ describe("Logger - Unit Tests", () => {
 		});
 
 		it("should inherit json option in child logger", async () => {
-			const parent = new Logger(undefined, { json: true, colors: false, timestamps: false });
+			const parent = new Logger(undefined, {
+				json: true,
+				colors: false,
+				timestamps: false
+			});
 			const child = parent.child({});
 
 			await child.info("child message");
@@ -260,7 +268,11 @@ describe("Logger - Unit Tests", () => {
 
 		it("should allow child to override json option", async () => {
 			const parent = new Logger(undefined, { json: true, colors: false });
-			const child = parent.child({ json: false, timestamps: false, colors: false });
+			const child = parent.child({
+				json: false,
+				timestamps: false,
+				colors: false
+			});
 
 			await child.info("child message");
 

@@ -580,7 +580,7 @@ describe("Log Filtering", () => {
 	describe("Filter with File Logging", () => {
 		it("should filter messages from file output", async () => {
 			const logFile = "/tmp/filter-test.log";
-			
+
 			const logger = new Logger(undefined, {
 				loggingFile: logFile,
 				filter: {

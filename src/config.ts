@@ -136,8 +136,7 @@ async function handleRotation(
 	messageWithNewline: string,
 	config: LogRotationConfig
 ): Promise<void> {
-	const { maxSize, maxFiles = 5, daily, hourly, compress, dateFormat } =
-		config;
+	const { maxSize, maxFiles = 5, daily, hourly, compress, dateFormat } = config;
 
 	const now = new Date();
 	const state = rotationStates.get(filePath);
@@ -233,10 +232,7 @@ function formatTimestamp(date: Date, customFormat?: string): string {
 	if (customFormat) {
 		return customFormat
 			.replace("YYYY", date.getFullYear().toString())
-			.replace(
-				"MM",
-				(date.getMonth() + 1).toString().padStart(2, "0")
-			)
+			.replace("MM", (date.getMonth() + 1).toString().padStart(2, "0"))
 			.replace("DD", date.getDate().toString().padStart(2, "0"))
 			.replace("HH", date.getHours().toString().padStart(2, "0"))
 			.replace("mm", date.getMinutes().toString().padStart(2, "0"))
@@ -262,8 +258,7 @@ async function cleanupOldFiles(
 		const files = readdirSync(dir)
 			.filter((f: string) => {
 				const isOld =
-					f.startsWith(fileName) &&
-					(f.includes(".old") || f.includes("-20"));
+					f.startsWith(fileName) && (f.includes(".old") || f.includes("-20"));
 				const isCompressed =
 					compress && f.startsWith(fileName) && f.endsWith(".gz");
 				return isOld || isCompressed;

@@ -68,7 +68,7 @@ export class Logger {
 		this.enableFileLogging = true;
 		this.path = path ?? null;
 		this.userOptions = options;
-		this.metadata = (options.metadata || {});
+		this.metadata = options.metadata || {};
 		this.onLog = options.onLog;
 		this.rotation = options.rotation;
 		this.filter = options.filter;
@@ -110,8 +110,7 @@ export class Logger {
 				finalConfig.timestamps = globalConfig.timestamps;
 			if (globalConfig.colors !== undefined)
 				finalConfig.colors = globalConfig.colors;
-			if (globalConfig.json !== undefined)
-				finalConfig.json = globalConfig.json;
+			if (globalConfig.json !== undefined) finalConfig.json = globalConfig.json;
 			if (globalConfig.metadata !== undefined)
 				finalConfig.metadata = globalConfig.metadata;
 			if (globalConfig.loggingFile !== undefined)
@@ -167,10 +166,21 @@ export class Logger {
 		return LOG_LEVELS[level] >= LOG_LEVELS[this.level];
 	}
 
-	private passesFilter(level: LogLevel, message: string, args: unknown[] = []): boolean {
+	private passesFilter(
+		level: LogLevel,
+		message: string,
+		args: unknown[] = []
+	): boolean {
 		if (!this.filter) return true;
 
-		const { include, exclude, minLevel, filter: customFilter, includePrefixes, excludePrefixes } = this.filter;
+		const {
+			include,
+			exclude,
+			minLevel,
+			filter: customFilter,
+			includePrefixes,
+			excludePrefixes
+		} = this.filter;
 
 		// Custom filter function
 		if (customFilter) {
@@ -193,7 +203,8 @@ export class Logger {
 		// Check include patterns
 		if (include) {
 			try {
-				const pattern = typeof include === "string" ? new RegExp(include) : include;
+				const pattern =
+					typeof include === "string" ? new RegExp(include) : include;
 				if (!pattern.test(message)) return false;
 			} catch {
 				// Invalid regex, skip this check
@@ -203,7 +214,8 @@ export class Logger {
 		// Check exclude patterns
 		if (exclude) {
 			try {
-				const pattern = typeof exclude === "string" ? new RegExp(exclude) : exclude;
+				const pattern =
+					typeof exclude === "string" ? new RegExp(exclude) : exclude;
 				if (pattern.test(message)) return false;
 			} catch {
 				// Invalid regex, skip this check
@@ -212,14 +224,20 @@ export class Logger {
 
 		// Check include prefixes
 		if (includePrefixes && includePrefixes.length > 0) {
-			if (!this.prefix || !includePrefixes.some(p => this.prefix!.startsWith(p))) {
+			if (
+				!this.prefix ||
+				!includePrefixes.some((p) => this.prefix!.startsWith(p))
+			) {
 				return false;
 			}
 		}
 
 		// Check exclude prefixes
 		if (excludePrefixes && excludePrefixes.length > 0) {
-			if (this.prefix && excludePrefixes.some(p => this.prefix!.startsWith(p))) {
+			if (
+				this.prefix &&
+				excludePrefixes.some((p) => this.prefix!.startsWith(p))
+			) {
 				return false;
 			}
 		}
@@ -388,7 +406,8 @@ export class Logger {
 			colors: options.colors ?? inheritedColors,
 			json: options.json ?? inheritedJson,
 			metadata: options.metadata ?? inheritedMetadata,
-			enableFileLogging: options.enableFileLogging ?? inheritedEnableFileLogging,
+			enableFileLogging:
+				options.enableFileLogging ?? inheritedEnableFileLogging,
 			rotation: options.rotation ?? inheritedRotation,
 			filter: options.filter ?? inheritedFilter,
 			loggingFile: options.loggingFile ?? this.loggingFile ?? undefined
