@@ -4,7 +4,8 @@ import {
 	LogLevel,
 	LoggerConfig,
 	LoggerOptions,
-	OnLogFunction
+	OnLogFunction,
+	LogRotationConfig
 } from "./types";
 
 const LOG_LEVELS: Record<LogLevel, number> = {
@@ -52,6 +53,7 @@ export class Logger {
 	private userOptions: LoggerOptions;
 	private metadata: Record<string, unknown>;
 	private onLog: OnLogFunction | undefined;
+	private rotation: LogRotationConfig | undefined;
 
 	constructor(path?: string, options: LoggerOptions = {}) {
 		// Start with defaults, will be overridden by config and user options
@@ -66,6 +68,7 @@ export class Logger {
 		this.userOptions = options;
 		this.metadata = (options.metadata || {});
 		this.onLog = options.onLog;
+		this.rotation = options.rotation;
 	}
 
 	private async ensureConfig(): Promise<void> {
@@ -75,10 +78,11 @@ export class Logger {
 
 		type ConfigWithOptionalOnLog = Omit<
 			Required<LoggerOptions>,
-			"onLog" | "enableFileLogging"
+			"onLog" | "enableFileLogging" | "rotation"
 		> & {
 			onLog?: OnLogFunction;
 			enableFileLogging: boolean;
+			rotation?: LogRotationConfig;
 		};
 
 		// Start with hardcoded defaults
@@ -91,6 +95,7 @@ export class Logger {
 			metadata: {},
 			onLog: this.onLog,
 			enableFileLogging: true,
+			rotation: undefined,
 			loggingFile: null!
 		};
 
@@ -129,6 +134,8 @@ export class Logger {
 			finalConfig.onLog = this.userOptions.onLog;
 		if (this.userOptions.enableFileLogging !== undefined)
 			finalConfig.enableFileLogging = this.userOptions.enableFileLogging;
+		if (this.userOptions.rotation !== undefined)
+			finalConfig.rotation = this.userOptions.rotation;
 
 		// Apply final config to instance
 		this.level = finalConfig.level;
@@ -139,6 +146,7 @@ export class Logger {
 		this.metadata = finalConfig.metadata;
 		this.onLog = finalConfig.onLog;
 		this.enableFileLogging = finalConfig.enableFileLogging;
+		this.rotation = finalConfig.rotation;
 		this.loggingFile = finalConfig.loggingFile ?? null;
 		// path is set in constructor and not overridden by config
 
@@ -240,7 +248,7 @@ export class Logger {
 							.join(" ");
 				}
 			}
-			await writeToFile(this.loggingFile, fileOutput);
+			await writeToFile(this.loggingFile, fileOutput, this.rotation);
 		}
 
 		// Execute onLog callback if defined (from options or config)
@@ -296,6 +304,7 @@ export class Logger {
 		const inheritedTimestamps = this.timestamps;
 		const inheritedMetadata = this.userOptions.metadata;
 		const inheritedEnableFileLogging = this.enableFileLogging;
+		const inheritedRotation = this.rotation;
 		return new Logger(this.path ?? undefined, {
 			level: options.level,
 			prefix: options.prefix ?? inheritedPrefix,
@@ -304,6 +313,7 @@ export class Logger {
 			json: options.json ?? inheritedJson,
 			metadata: options.metadata ?? inheritedMetadata,
 			enableFileLogging: options.enableFileLogging ?? inheritedEnableFileLogging,
+			rotation: options.rotation ?? inheritedRotation,
 			loggingFile: options.loggingFile ?? this.loggingFile ?? undefined
 		});
 	}

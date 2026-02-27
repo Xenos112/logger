@@ -2,6 +2,23 @@ export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export type LowercaseLogLevel = Lowercase<LogLevel>;
 
+export type RotationStrategy = "size" | "date" | "daily" | "hourly";
+
+export interface LogRotationConfig {
+	/** Maximum file size in bytes before rotation (e.g., 10 * 1024 * 1024 for 10MB) */
+	maxSize?: number;
+	/** Number of backup files to keep */
+	maxFiles?: number;
+	/** Rotate daily at midnight */
+	daily?: boolean;
+	/** Rotate hourly */
+	hourly?: boolean;
+	/** Compress rotated files */
+	compress?: boolean;
+	/** Custom date format for rotated file names */
+	dateFormat?: string;
+}
+
 export interface LoggerOptions<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
 	level?: LogLevel;
 	prefix?: string;
@@ -12,6 +29,7 @@ export interface LoggerOptions<TMetadata extends Record<string, unknown> = Recor
 	json?: boolean;
 	metadata?: TMetadata;
 	onLog?: OnLogFunction<TMetadata>;
+	rotation?: LogRotationConfig;
 }
 
 export interface LogDetails<TMetadata extends Record<string, unknown> = Record<string, unknown>> {
@@ -39,6 +57,8 @@ export interface LoggerConfig<TMetadata extends Record<string, unknown> = Record
 	metadata?: TMetadata;
 	/** Callback function executed on every log */
 	onLog?: OnLogFunction<TMetadata>;
+	/** Log rotation configuration */
+	rotation?: LogRotationConfig;
 }
 
 export type LogMessageTemplate<T extends string> = T;
@@ -57,4 +77,5 @@ export interface LoggerConstructorOptions<TMetadata extends Record<string, unkno
 	json?: boolean;
 	metadata?: TMetadata;
 	onLog?: OnLogFunction<TMetadata>;
+	rotation?: LogRotationConfig;
 }

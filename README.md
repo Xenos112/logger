@@ -220,11 +220,11 @@ MIT
 
 ## Core Features
 
-- [ ] **Log Rotation**
-  - [ ] Automatic file rotation by size/date
-  - [ ] Configurable max file size (e.g., 10MB)
-  - [ ] Keep N number of backup files
-  - [ ] Compress old logs
+- [x] **Log Rotation**
+  - [x] Automatic file rotation by size/date
+  - [x] Configurable max file size (e.g., 10MB)
+  - [x] Keep N number of backup files
+  - [x] Compress old logs
 
 - [ ] **Structured Logging**
   - [x] JSON output format option
