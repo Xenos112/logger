@@ -227,7 +227,7 @@ MIT
   - [ ] Compress old logs
 
 - [ ] **Structured Logging**
-  - [ ] JSON output format option
+  - [x] JSON output format option
   - [ ] Key-value pairs for metadata
   - [ ] Searchable log format
   - [ ] Integration with log analysis tools

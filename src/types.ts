@@ -6,6 +6,7 @@ export interface LoggerOptions {
 	timestamps?: boolean;
 	colors?: boolean;
 	loggingFile?: string;
+	json?: boolean;
 }
 
 export interface LogDetails {
@@ -26,6 +27,8 @@ export interface LoggerConfig {
 	timestamps?: boolean;
 	/** Use colors in console output */
 	colors?: boolean;
+	/** Output logs in JSON format */
+	json?: boolean;
 	/** Callback function executed on every log */
 	onLog?: OnLogFunction;
 }

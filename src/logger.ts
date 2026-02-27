@@ -30,6 +30,7 @@ export class Logger {
 	private prefix: string;
 	private timestamps: boolean;
 	private colors: boolean;
+	private json: boolean;
 	private loggingFile: string | null;
 	private path: string | null;
 	private configLoaded: boolean = false;
@@ -41,6 +42,7 @@ export class Logger {
 		this.prefix = "";
 		this.timestamps = true;
 		this.colors = true;
+		this.json = false;
 		this.loggingFile = null;
 		this.path = path ?? null;
 		this.userOptions = options;
@@ -57,6 +59,7 @@ export class Logger {
 			prefix: "",
 			timestamps: true,
 			colors: true,
+			json: false,
 			loggingFile: null!
 		};
 
@@ -66,6 +69,8 @@ export class Logger {
 				finalConfig.timestamps = globalConfig.timestamps;
 			if (globalConfig.colors !== undefined)
 				finalConfig.colors = globalConfig.colors;
+			if (globalConfig.json !== undefined)
+				finalConfig.json = globalConfig.json;
 			if (globalConfig.loggingFile !== undefined)
 				finalConfig.loggingFile = globalConfig.loggingFile;
 		}
@@ -79,6 +84,8 @@ export class Logger {
 			finalConfig.timestamps = this.userOptions.timestamps;
 		if (this.userOptions.colors !== undefined)
 			finalConfig.colors = this.userOptions.colors;
+		if (this.userOptions.json !== undefined)
+			finalConfig.json = this.userOptions.json;
 		if (this.userOptions.loggingFile !== undefined)
 			finalConfig.loggingFile = this.userOptions.loggingFile;
 
@@ -87,6 +94,7 @@ export class Logger {
 		this.prefix = finalConfig.prefix;
 		this.timestamps = finalConfig.timestamps;
 		this.colors = finalConfig.colors;
+		this.json = finalConfig.json;
 		this.loggingFile = finalConfig.loggingFile ?? null;
 		// path is set in constructor and not overridden by config
 
@@ -102,6 +110,10 @@ export class Logger {
 		message: string,
 		includeColors: boolean
 	): string {
+		if (this.json) {
+			return this.formatJsonMessage(level, message);
+		}
+
 		const parts: string[] = [];
 
 		if (this.timestamps) {
@@ -127,6 +139,27 @@ export class Logger {
 		return formatted;
 	}
 
+	private formatJsonMessage(level: LogLevel, message: string): string {
+		const logObject: Record<string, unknown> = {
+			level: level.toUpperCase(),
+			message
+		};
+
+		if (this.timestamps) {
+			logObject.timestamp = new Date().toISOString();
+		}
+
+		if (this.path) {
+			logObject.file = this.path;
+		}
+
+		if (this.prefix) {
+			logObject.prefix = this.prefix;
+		}
+
+		return JSON.stringify(logObject);
+	}
+
 	private async log(
 		level: LogLevel,
 		message: string,
@@ -142,16 +175,23 @@ export class Logger {
 		const fileMessage = this.formatMessage(level, message, false);
 
 		if (this.loggingFile) {
-			const fileOutput =
-				args.length > 0
-					? fileMessage +
+			let fileOutput = fileMessage;
+			if (args.length > 0) {
+				if (this.json) {
+					const logObj = JSON.parse(fileMessage);
+					logObj.args = args;
+					fileOutput = JSON.stringify(logObj);
+				} else {
+					fileOutput =
+						fileMessage +
 						" " +
 						args
 							.map((a) =>
 								typeof a === "object" ? JSON.stringify(a) : String(a)
 							)
-							.join(" ")
-					: fileMessage;
+							.join(" ");
+				}
+			}
 			await writeToFile(this.loggingFile, fileOutput);
 		}
 
@@ -167,15 +207,19 @@ export class Logger {
 			await globalConfig.onLog(details);
 		}
 
-		switch (level) {
-			case "error":
-				console.error(consoleMessage, ...args);
-				break;
-			case "warn":
-				console.warn(consoleMessage, ...args);
-				break;
-			default:
-				console.log(consoleMessage, ...args);
+		if (this.json) {
+			console.log(consoleMessage);
+		} else {
+			switch (level) {
+				case "error":
+					console.error(consoleMessage, ...args);
+					break;
+				case "warn":
+					console.warn(consoleMessage, ...args);
+					break;
+				default:
+					console.log(consoleMessage, ...args);
+			}
 		}
 	}
 
@@ -196,13 +240,16 @@ export class Logger {
 	}
 
 	child(options: LoggerOptions): Logger {
-		// Use userOptions.prefix as fallback if this.prefix hasn't been loaded yet
 		const inheritedPrefix = this.prefix || this.userOptions.prefix;
+		const inheritedJson = this.userOptions.json;
+		const inheritedColors = this.colors;
+		const inheritedTimestamps = this.timestamps;
 		return new Logger(this.path ?? undefined, {
 			level: options.level,
 			prefix: options.prefix ?? inheritedPrefix,
-			timestamps: options.timestamps,
-			colors: options.colors,
+			timestamps: options.timestamps ?? inheritedTimestamps,
+			colors: options.colors ?? inheritedColors,
+			json: options.json ?? inheritedJson,
 			loggingFile: options.loggingFile ?? this.loggingFile ?? undefined
 		});
 	}
