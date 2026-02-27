@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Logger } from "../src/logger.js";
 import { clearConfigCache, writeToFile } from "../src/config.js";
 import * as fs from "fs";

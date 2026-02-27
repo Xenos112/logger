@@ -1,9 +1,16 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { Logger } from "../src/logger.js";
 import { clearConfigCache } from "../src/config.js";
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe("Logger - Unit Tests", () => {
 	let consoleSpy: any;
+	const testDir = path.join(__dirname, "logger-test-logs");
 
 	beforeEach(() => {
 		clearConfigCache();
@@ -13,10 +20,16 @@ describe("Logger - Unit Tests", () => {
 			error: vi.spyOn(console, "error").mockImplementation(() => {}),
 			info: vi.spyOn(console, "info").mockImplementation(() => {})
 		};
+		if (fs.existsSync(testDir)) {
+			fs.rmSync(testDir, { recursive: true, force: true });
+		}
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
+		if (fs.existsSync(testDir)) {
+			fs.rmSync(testDir, { recursive: true, force: true });
+		}
 	});
 
 	describe("Constructor", () => {
@@ -486,6 +499,218 @@ describe("Logger - Unit Tests", () => {
 			const callArg = consoleSpy.log.mock.calls[0][0];
 			const parsed = JSON.parse(callArg);
 			expect(parsed.metadata).toEqual({ user: { name: "John", id: 1 } });
+		});
+	});
+
+	describe("Enable File Logging", () => {
+		it("should write to file by default when loggingFile is set", async () => {
+			const logFile = path.join(testDir, "default-file.log");
+			const logger = new Logger(undefined, {
+				loggingFile: logFile,
+				colors: false,
+				timestamps: false
+			});
+
+			await logger.info("test message");
+
+			expect(fs.existsSync(logFile)).toBe(true);
+		});
+
+		it("should not write to file when enableFileLogging is false", async () => {
+			const logFile = path.join(testDir, "disabled-file.log");
+			const logger = new Logger(undefined, {
+				loggingFile: logFile,
+				enableFileLogging: false,
+				colors: false,
+				timestamps: false
+			});
+
+			await logger.info("test message");
+
+			expect(fs.existsSync(logFile)).toBe(false);
+		});
+
+		it("should still log to console when enableFileLogging is false", async () => {
+			const logger = new Logger(undefined, {
+				enableFileLogging: false,
+				colors: false,
+				timestamps: false
+			});
+
+			await logger.info("console only");
+
+			expect(consoleSpy.log).toHaveBeenCalled();
+			const callArg = consoleSpy.log.mock.calls[0][0];
+			expect(callArg).toContain("console only");
+		});
+
+		it("should inherit enableFileLogging in child logger", async () => {
+			const parent = new Logger(undefined, {
+				enableFileLogging: false,
+				colors: false,
+				timestamps: false
+			});
+
+			const child = parent.child({});
+
+			await child.info("child message");
+
+			expect(consoleSpy.log).toHaveBeenCalled();
+		});
+
+		it("should allow child to override enableFileLogging", async () => {
+			const parentLogFile = path.join(testDir, "parent-file.log");
+			const childLogFile = path.join(testDir, "child-file.log");
+
+			const parent = new Logger(undefined, {
+				loggingFile: parentLogFile,
+				enableFileLogging: false,
+				colors: false,
+				timestamps: false
+			});
+
+			const child = parent.child({
+				loggingFile: childLogFile,
+				enableFileLogging: true
+			});
+
+			await child.info("child with file");
+
+			expect(fs.existsSync(childLogFile)).toBe(true);
+		});
+	});
+
+	describe("onLog Callback", () => {
+		it("should call onLog callback when provided in options", async () => {
+			const callbackLogs: any[] = [];
+
+			const logger = new Logger(undefined, {
+				colors: false,
+				timestamps: false,
+				onLog: (details) => {
+					callbackLogs.push(details);
+				}
+			});
+
+			await logger.info("test message");
+
+			expect(callbackLogs.length).toBe(1);
+			expect(callbackLogs[0].message).toBe("test message");
+			expect(callbackLogs[0].level).toBe("info");
+		});
+
+		it("should pass metadata to onLog callback", async () => {
+			const callbackLogs: any[] = [];
+
+			const logger = new Logger(undefined, {
+				colors: false,
+				timestamps: false,
+				metadata: { userId: 123 },
+				onLog: (details) => {
+					callbackLogs.push(details);
+				}
+			});
+
+			await logger.info("test");
+
+			expect(callbackLogs[0].metadata).toEqual({ userId: 123 });
+		});
+
+		it("should pass file path to onLog callback", async () => {
+			const callbackLogs: any[] = [];
+
+			const logger = new Logger("/test/path.ts", {
+				colors: false,
+				timestamps: false,
+				onLog: (details) => {
+					callbackLogs.push(details);
+				}
+			});
+
+			await logger.info("test");
+
+			expect(callbackLogs[0].file).toBe("/test/path.ts");
+		});
+
+		it("should pass args to onLog callback", async () => {
+			const callbackLogs: any[] = [];
+
+			const logger = new Logger(undefined, {
+				colors: false,
+				timestamps: false,
+				onLog: (details) => {
+					callbackLogs.push(details);
+				}
+			});
+
+			await logger.info("message", { key: "value" }, 42);
+
+			expect(callbackLogs[0].args).toEqual([{ key: "value" }, 42]);
+		});
+
+		it("should support async onLog callback", async () => {
+			const results: string[] = [];
+
+			const logger = new Logger(undefined, {
+				colors: false,
+				timestamps: false,
+				onLog: async (details) => {
+					await new Promise((r) => setTimeout(r, 10));
+					results.push(details.message);
+				}
+			});
+
+			await logger.info("async test");
+			await logger.info("async test 2");
+
+			expect(results.length).toBe(2);
+		});
+
+		it("should handle onLog callback that throws", async () => {
+			const logger = new Logger(undefined, {
+				colors: false,
+				timestamps: false,
+				onLog: () => {
+					throw new Error("Callback error");
+				}
+			});
+
+			// Should not crash the logger - error should be caught internally
+			await expect(logger.info("test")).resolves.not.toThrow();
+		});
+	});
+
+	describe("JSON with Args", () => {
+		it("should include args in JSON file output", async () => {
+			const logFile = path.join(testDir, "json-args.log");
+			const logger = new Logger(undefined, {
+				json: true,
+				colors: false,
+				timestamps: false,
+				loggingFile: logFile
+			});
+
+			await logger.info("message", { key: "value" }, 123);
+
+			await new Promise((r) => setTimeout(r, 50));
+
+			const content = fs.readFileSync(logFile, "utf-8");
+			const parsed = JSON.parse(content);
+			expect(parsed.args).toEqual([{ key: "value" }, 123]);
+		});
+
+		it("should handle circular reference in args", async () => {
+			const logger = new Logger(undefined, {
+				json: true,
+				colors: false,
+				timestamps: false
+			});
+
+			const obj: any = { name: "test" };
+			obj.self = obj;
+
+			// Should not throw and should handle gracefully
+			await expect(logger.info("circular", obj)).resolves.not.toThrow();
 		});
 	});
 });

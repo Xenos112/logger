@@ -262,7 +262,11 @@ export class Logger {
 				args,
 				metadata: this.metadata
 			};
-			await this.onLog(details);
+			try {
+				await this.onLog(details);
+			} catch {
+				// Silently ignore callback errors
+			}
 		}
 
 		if (this.json) {
