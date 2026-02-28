@@ -48,7 +48,7 @@ export async function loadLoggerConfig(): Promise<LoggerConfig> {
 			// Dynamic import to avoid browser bundling issues
 			const { pathToFileURL } = await import("url");
 
-			const configPath = join(process.cwd(), "logger.config.ts");
+			const configPath = join(process.cwd(), "logx.config.ts");
 			const configModule = await import(
 				/* @vite-ignore */ pathToFileURL(configPath).href
 			);

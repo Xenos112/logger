@@ -1,24 +1,26 @@
-# Simple Logger
+# Logx
 
-A lightweight, TypeScript logger that works in both Node.js and browser environments with intelligent environment detection and optional file logging.
+A lightweight, flexible TypeScript logger that works in both Node.js and browser environments with intelligent environment detection and optional file logging.
 
 ## Features
 
 - 🌍 **Dual Environment**: Works seamlessly in Node.js and browser
 - 📝 **File Logging**: Automatic file creation in Node.js, optional in browser dev mode
-- ⚙️ **Configuration**: Load settings from `logger.config.ts` with type safety
+- ⚙️ **Configuration**: Load settings from `logx.config.ts` with type safety
 - 🎨 **Customizable**: Configurable levels, prefixes, timestamps, and colors
 - 🔄 **Child Loggers**: Create specialized loggers with inherited settings
 - 📊 **Callbacks**: Execute custom logic on each log entry
 - 🚀 **Zero Dependencies**: Lightweight and fast
 - 📦 **TypeScript**: Full type safety and IntelliSense support
+- 🛡️ **Filtering**: Pattern-based, prefix-based, and custom filters
+- 🔄 **Log Rotation**: Size-based and time-based rotation with compression
 
 ## Installation
 
 ```bash
-npm install simple-logger
+npm install logx
 # or
-bun add simple-logger
+bun add logx
 ```
 
 ## Quick Start
@@ -26,7 +28,7 @@ bun add simple-logger
 ### Basic Usage
 
 ```typescript
-import { Logger } from "simple-logger";
+import { Logger } from "logx";
 
 const logger = new Logger();
 await logger.info("Hello, world!");
@@ -36,7 +38,7 @@ await logger.info("Hello, world!");
 ### With Path and Options
 
 ```typescript
-import { Logger } from "simple-logger";
+import { Logger } from "logx";
 
 const logger = new Logger("/app/components/User.tsx", {
 	level: "debug",
@@ -53,7 +55,7 @@ await logger.info("User logged in");
 ### Using `import.meta.url`
 
 ```typescript
-import { Logger } from "simple-logger";
+import { Logger } from "logx";
 
 const logger = new Logger(import.meta.url);
 await logger.debug("Component initialized");
@@ -61,10 +63,10 @@ await logger.debug("Component initialized");
 
 ## Configuration
 
-Create a `logger.config.ts` file in your project root:
+Create a `logx.config.ts` file in your project root:
 
 ```typescript
-import { defineConfig } from "simple-logger";
+import { defineConfig } from "logx";
 
 export default defineConfig({
 	timestamps: true,
@@ -130,7 +132,7 @@ await child.info("API request received");
 
 - Full file logging support
 - Automatic directory creation
-- Config file loading from `logger.config.ts`
+- Config file loading from `logx.config.ts`
 
 ### Browser
 
@@ -144,7 +146,7 @@ await child.info("API request received");
 
 ```typescript
 import express from "express";
-import { Logger } from "simple-logger";
+import { Logger } from "logx";
 
 const app = express();
 const logger = new Logger("/app/server.ts", { prefix: "Express" });
@@ -163,7 +165,7 @@ app.listen(3000, () => {
 
 ```tsx
 import { useEffect } from "react";
-import { Logger } from "simple-logger";
+import { Logger } from "logx";
 
 const logger = new Logger(import.meta.url, { prefix: "UserProfile" });
 
@@ -226,17 +228,17 @@ MIT
   - [x] Keep N number of backup files
   - [x] Compress old logs
 
-- [ ] **Structured Logging**
+- [x] **Structured Logging**
   - [x] JSON output format option
   - [x] Key-value pairs for metadata
   - [ ] Searchable log format
   - [ ] Integration with log analysis tools
 
-- [ ] **Log Filtering**
-  - [ ] Pattern-based filtering
-  - [ ] Include/exclude specific loggers
-  - [ ] Runtime log level changes
-  - [ ] Conditional logging
+- [x] **Log Filtering**
+  - [x] Pattern-based filtering
+  - [x] Include/exclude specific loggers
+  - [x] Runtime log level changes
+  - [x] Conditional logging
 
 ## Advanced Features
 

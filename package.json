@@ -1,15 +1,17 @@
 {
-	"name": "logger",
+	"name": "logx",
 	"version": "1.0.0",
-	"description": "Simple TypeScript logger with config file support",
+	"description": "A lightweight, flexible TypeScript logger with filtering, rotation, and structured logging",
 	"keywords": [
 		"config",
+		"filter",
 		"javascript",
+		"log",
 		"logger",
 		"logging",
-		"react",
-		"typescript",
-		"vue"
+		"logx",
+		"rotate",
+		"typescript"
 	],
 	"files": [
 		"dist",
