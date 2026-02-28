@@ -14,6 +14,7 @@ A lightweight, flexible TypeScript logger that works in both Node.js and browser
 - 📦 **TypeScript**: Full type safety and IntelliSense support
 - 🛡️ **Filtering**: Pattern-based, prefix-based, and custom filters
 - 🔄 **Log Rotation**: Size-based and time-based rotation with compression
+- 🌐 **Framework Middleware**: Built-in middleware for Express, Hono, and Elysia
 
 ## Installation
 
@@ -142,23 +143,50 @@ await child.info("API request received");
 
 ## Examples
 
-### Express.js Integration
+### Express.js Middleware
 
 ```typescript
 import express from "express";
-import { Logger } from "logx";
+import { Logger, expressMiddleware } from "logx";
 
 const app = express();
 const logger = new Logger("/app/server.ts", { prefix: "Express" });
 
-app.use((req, res, next) => {
-	await logger.info(`${req.method} ${req.path}`);
-	next();
+app.use(expressMiddleware({ logger }));
+
+app.get("/", (req, res) => {
+	res.send("Hello!");
 });
 
-app.listen(3000, () => {
-	await logger.info("Server started on port 3000");
-});
+app.listen(3000);
+```
+
+### Hono Middleware
+
+```typescript
+import { Hono } from "hono";
+import { Logger, honoMiddleware } from "logx";
+
+const app = new Hono();
+const logger = new Logger("/app/server.ts", { prefix: "Hono" });
+
+app.use("*", honoMiddleware({ logger }));
+
+app.get("/", (c) => c.text("Hello!"));
+```
+
+### Elysia Plugin
+
+```typescript
+import { Elysia } from "elysia";
+import { Logger, elysiaPlugin } from "logx";
+
+const logger = new Logger("/app/server.ts", { prefix: "Elysia" });
+
+const app = new Elysia()
+	.use(elysiaPlugin({ logger }))
+	.get("/", () => "Hello!")
+	.listen(3000);
 ```
 
 ### React Component
@@ -275,7 +303,9 @@ MIT
   - [ ] Export capabilities
 
 - [ ] **Integration Features**
-  - [ ] Express middleware
+  - [x] Express middleware
+  - [x] Hono middleware
+  - [x] Elysia plugin
   - [ ] Next.js plugin
   - [ ] React DevTools integration
   - [ ] Browser DevTools panel

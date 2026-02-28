@@ -42,12 +42,23 @@
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
+		"@types/express": "^4.17.21",
 		"@vitest/ui": "^1.0.0",
 		"oxfmt": "^0.34.0",
 		"oxlint": "^1.49.0",
 		"tsup": "^8.5.1",
 		"typescript": "^5.0.0",
 		"vitest": "^1.0.0"
+	},
+	"optionalDependencies": {
+		"elysia": ">=0.7.0",
+		"express": ">=4.18.0",
+		"hono": ">=3.0.0"
+	},
+	"peerDependencies": {
+		"elysia": ">=0.7.0",
+		"express": ">=4.18.0",
+		"hono": ">=3.0.0"
 	},
 	"engines": {
 		"node": ">=18"

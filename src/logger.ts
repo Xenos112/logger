@@ -1,4 +1,5 @@
 import { loadLoggerConfig, writeToFile } from "./config";
+import { LOG_LEVEL_COLORS, RESET } from "./colors";
 import {
 	LogDetails,
 	LogLevel,
@@ -15,15 +16,6 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 	warn: 2,
 	error: 3
 };
-
-const COLORS: Record<LogLevel, string> = {
-	debug: "\x1b[36m", // Cyan
-	info: "\x1b[32m", // Green
-	warn: "\x1b[33m", // Yellow
-	error: "\x1b[31m" // Red
-};
-
-const RESET = "\x1b[0m";
 
 function safeStringify(obj: unknown): string {
 	try {
@@ -273,7 +265,7 @@ export class Logger {
 		let formatted = parts.join(" ") + " " + message;
 
 		if (includeColors && this.colors) {
-			formatted = COLORS[level] + formatted + RESET;
+			formatted = LOG_LEVEL_COLORS[level] + formatted + RESET;
 		}
 
 		return formatted;

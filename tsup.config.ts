@@ -13,7 +13,7 @@ export default defineConfig({
 	outDir: "dist",
 	treeshake: true,
 	// Don't bundle external dependencies
-	external: ["fs", "path", "url"],
+	external: ["fs", "path", "url", "express", "hono", "elysia"],
 	// Preserve dynamic imports for Node.js-only features
 	esbuildOptions: (options) => {
 		options.banner = {
